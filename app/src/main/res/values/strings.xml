@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">UASMobcom</string>
+    <string-array name="url">
+        <item>http://</item>
+        <item>https://</item>
+    </string-array>
+</resources>
