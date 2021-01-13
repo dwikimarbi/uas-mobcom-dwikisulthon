@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,6 +25,10 @@ import com.mobsandgeeks.saripaar.ValidationError;
 import com.mobsandgeeks.saripaar.Validator;
 import com.mobsandgeeks.saripaar.annotation.Domain;
 import com.mobsandgeeks.saripaar.annotation.NotEmpty;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -45,6 +50,7 @@ public class MainActivity extends AppCompatActivity implements Validator.Validat
     String htmlSpinner;
     String htmlText;
     String url;
+    String title;
 
     Validator validator;
     private static final String TAG = "MainActivity";
@@ -103,7 +109,6 @@ public class MainActivity extends AppCompatActivity implements Validator.Validat
 
     @SuppressLint("StaticFieldLeak")
     private class Title extends AsyncTask<Void, Void, Void> {
-        String title;
 
         @Override
         protected void onPreExecute() {
@@ -117,32 +122,28 @@ public class MainActivity extends AppCompatActivity implements Validator.Validat
 
         @Override
         protected Void doInBackground(Void... params) {
+                RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+                StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                        new Response.Listener<String>() {
+                            @Override
+                            public void onResponse(String response) {
+                                title = response.toString().trim();
+                                title = title.replace("\n", "");
+                                Log.d(TAG, title);
+                                textView.setText(title);
+                                mProgressDialog.dismiss();
+                            }
+                        }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        title ="Error!";
+                        textView.setText(title);
+                        mProgressDialog.dismiss();
+                    }
+                });
 
-            try {
-                title = getURLSource(url);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-//                RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
-//                StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-//                        new Response.Listener<String>() {
-//                            @Override
-//                            public void onResponse(String response) {
-//                                // Display the first 500 characters of the response string.
-//                                title = response.substring(0,500);
-//                                //textView.setText("Response is: "+ response.substring(0,500));
-//                            }
-//                        }, new Response.ErrorListener() {
-//                    @Override
-//                    public void onErrorResponse(VolleyError error) {
-//                        //textView.setText("That didn't work!");
-//                        title ="That didn't work!";
-//                    }
-//                });
-//
-//                // Add the request to the RequestQueue.
-//                queue.add(stringRequest);
+                // Add the request to the RequestQueue.
+                queue.add(stringRequest);
             return null;
         }
 
@@ -151,30 +152,6 @@ public class MainActivity extends AppCompatActivity implements Validator.Validat
             // Set title into TextView
             textView.setText(title);
             mProgressDialog.dismiss();
-        }
-    }
-
-    public static String getURLSource(String url) throws IOException
-    {
-        URL urlObject = new URL(url);
-        URLConnection urlConnection = urlObject.openConnection();
-        urlConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
-
-        return toString(urlConnection.getInputStream());
-    }
-
-    private static String toString(InputStream inputStream) throws IOException
-    {
-        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8")))
-        {
-            String inputLine;
-            StringBuilder stringBuilder = new StringBuilder();
-            while ((inputLine = bufferedReader.readLine()) != null)
-            {
-                stringBuilder.append(inputLine);
-            }
-
-            return stringBuilder.toString();
         }
     }
 
